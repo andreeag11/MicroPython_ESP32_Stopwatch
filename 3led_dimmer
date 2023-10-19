@@ -1,0 +1,39 @@
+# https://www.upesy.com/blogs/tutorials/micropython-esp32-pwm-usage
+
+from machine import Pin, PWM
+import time
+
+
+pwm_led0 = PWM(Pin(1, mode=Pin.OUT)) # Attach PWM object on the LED pin
+pwm_led1 = PWM(Pin(3, mode=Pin.OUT)) # Attach PWM object on the LED pin
+pwm_led2 = PWM(Pin(25, mode=Pin.OUT)) # Attach PWM object on the LED pin
+
+
+# Settings?
+pwm_led0.freq(1000)
+pwm_led1.freq(1000)
+pwm_led2.freq(1000)
+
+
+if __name__ == "__main__":
+    while True:
+        for duty in range(0,1024, 4):
+            pwm_led0.duty(duty)   
+            time.sleep_ms(5)
+        for duty in range(1023,-1, -4):
+            pwm_led0.duty(duty)
+            time.sleep_ms(5)
+            
+        for duty in range(0,1024, 16):
+            pwm_led1.duty(duty)   
+            time.sleep_ms(5)
+        for duty in range(1023,-1, -16):
+            pwm_led1.duty(duty)
+            time.sleep_ms(5)
+            
+        for duty in range(0,1024, 32):
+            pwm_led2.duty(duty)   
+            time.sleep_ms(5)
+        for duty in range(1023,-1, -32):
+            pwm_led2.duty(duty)
+            time.sleep_ms(5)
