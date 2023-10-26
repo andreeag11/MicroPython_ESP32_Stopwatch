@@ -1,0 +1,73 @@
+# Import necessary modules
+from machine import Timer
+from lcd_hd44780 import LcdHd44780
+import time
+
+# Initialize LCD and create custom character
+# Four-data pins order: [D4, D5, D6, D7]
+lcd = LcdHd44780(rs=26, e=25, d=[13, 10, 9, 27])
+
+"""
+char0=bytearray([0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0])
+char1=bytearray([0x10,0x10,0x10,0x10,0x10,0x10,0x10,0x10])
+char2=bytearray([0x18,0x18,0x18,0x18,0x18,0x18,0x18,0x18])
+char3=bytearray([0x1c,0x1c,0x1c,0x1c,0x1c,0x1c,0x1c,0x1c])
+char4=bytearray([0x1e,0x1e,0x1e,0x1e,0x1e,0x1e,0x1e,0x1e])
+char5=bytearray([0x1e,0x1e,0x1e,0x1e,0x1e,0x1e,0x1e,0x1e])
+char6=bytearray([0x1f,0x1f,0x1f,0x1f,0x1f,0x1f,0x1f,0x1f])
+"""
+
+# Create an object for 64-bit Timer0
+
+lcd.move_to(1, 1)
+lcd.write("Stopwatch:")
+lcd.move_to(2, 3)
+lcd.write("00:")
+
+tenths_sec=0
+seconds=0
+minutes=0
+
+def timer0_handler(t):
+    """Interrupt handler of Timer0"""
+    global tenths_sec  # Access the global timer0_counter
+    global seconds
+    global minutes
+    
+    tenths_sec += 1
+    if tenths_sec > 9:
+        tenths_sec = 0
+        seconds+=1
+    if seconds > 59:
+        seconds = 0
+        minutes+=1
+        
+    lcd.move_to(2, 3)
+    if minutes<10:
+        lcd.write("0")
+    lcd.write(str(minutes)+":")
+    lcd.move_to(2, 6)
+    if seconds<10:
+        lcd.write("0")
+    lcd.write(str(seconds)+":")
+    
+    lcd.move_to(2, 9)
+    lcd.write(str(tenths_sec))
+ 
+
+timer0 = Timer(0)  # Between 0-3 for ESP32
+timer0.init(period=100, mode=Timer.PERIODIC, callback=timer0_handler)
+
+# Forever loop until interrupted by Ctrl+C. When Ctrl+C
+# is pressed, the code jumps to the KeyboardInterrupt exception
+try:
+    while True:
+        pass
+except KeyboardInterrupt:
+    print("Ctrl+C Pressed. Exiting...")
+
+# Optional cleanup code
+lcd.command(0x01)  # Clear display
+    
+timer0.deinit()  # Deinitialize the timer
+
