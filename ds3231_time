@@ -1,0 +1,80 @@
+from machine import I2C
+from machine import Pin
+from sh1106 import SH1106_I2C
+import time
+
+# I2C(id, scl, sda, freq)
+i2c = I2C(0, scl=Pin(22), sda=Pin(21), freq=100_000)
+
+# SH1106_I2C(width, height, i2c, addr, rotate)
+display = SH1106_I2C(128, 64, i2c, addr=0x3c, rotate=180)
+display.contrast(50)  # Set contrast to 50 %
+
+# display.text("Using OLED...", x=0, y=0)
+# # https://docs.micropython.org/en/latest/esp8266/tutorial/ssd1306.html
+# # Binary icon
+# icon = [
+#     [0, 0, 0, 0, 0, 0, 0, 0, 0],
+#     [0, 1, 1, 0, 0, 0, 1, 1, 0],
+#     [1, 1, 1, 1, 0, 1, 1, 1, 1],
+#     [1, 1, 1, 1, 1, 1, 1, 1, 1],
+#     [1, 1, 1, 1, 1, 1, 1, 1, 1],
+#     [0, 1, 1, 1, 1, 1, 1, 1, 0],
+#     [0, 0, 1, 1, 1, 1, 1, 0, 0],
+#     [0, 0, 0, 1, 1, 1, 0, 0, 0],
+#     [0, 0, 0, 0, 1, 0, 0, 0, 0]]
+# # Copy icon to OLED display position pixel-by-pixel
+# pos_x, pos_y = 100, 50
+# for j, row in enumerate(icon):
+#     for i, val in enumerate(row):
+#         display.pixel(x=i+pos_x, y=j+pos_y, color=val)
+#_____________________________________________________
+
+SENSOR_ADDR = 0x5c
+SENSOR_HUMI_REG = 0
+SENSOR_TEMP_REG = 2
+SENSOR_CHECKSUM = 4
+
+print("Stop the code execution by pressing `Ctrl+C` key.")
+print("")
+print("Scanning I2C... ", end="")
+addrs = i2c.scan()
+if SENSOR_ADDR in addrs:
+    print(f"{hex(SENSOR_ADDR)} detected")
+else:
+    print("[ERROR] Sensor is not detected")
+
+try:
+    while True:
+        # readfrom_mem(addr, memaddr, nbytes)
+        val = i2c.readfrom_mem(SENSOR_ADDR, SENSOR_TEMP_REG, 2)
+        a=val[0]
+        b=val[1]
+        print(f"temperature: {val[0]}.{val[1]} {chr(176)}C")
+        display.text("Temperature:", x=0, y=0)
+        text=str(a)+"."+str(b)+" C"
+        display.text(text, x=0, y=12)
+        display.show()
+        #val2 = i2c.readfrom_mem(SENSOR_ADDR, SENSOR_HUMI_REG, 2)
+        #print(f"humidity: {val2[0]}.{val[1]}")
+    
+        time.sleep(5)
+        display.fill(0)
+        
+        #val3 = i2c.readfrom_mem(SENSOR_ADDR, SENSOR_CHECKSUM, 1)
+        #print("checksum byte: {val3[0]}")
+#_________________________________________________________________________
+
+#print("Stop the code execution by pressing `Ctrl+C` key.")
+#print("If it does not respond, press the onboard `reset` button.")
+
+# try:
+#     while True:
+#         time.sleep(.1)
+
+except KeyboardInterrupt:
+    print("Ctrl+C Pressed. Exiting...")
+    display.poweroff()
+    
+    # https://docs.micropython.org/en/latest/esp8266/tutorial/ssd1306.html
+
