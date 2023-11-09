@@ -14,7 +14,7 @@ button = Pin(27, Pin.IN, Pin.PULL_UP)
 display = SH1106_I2C(128, 64, i2c, addr=0x3c, rotate=180)
 display.contrast(50)  # Set contrast to 50 %
 
-#RTC_ADDR= 
+RTC_ADDR=0x68
 RTC_SECONDS = 0
 RTC_MINUTES = 1
 RTC_HOUR = 2
@@ -33,31 +33,25 @@ try:
         # readfrom_mem(addr, memaddr, nbytes)
         #seconds
         val = i2c.readfrom_mem(RTC_ADDR, RTC_SECONDS, 1)
-        seconds_units = val & 0b00001111;
-        seconds_tens = (val & 0b01110000) >> 4;
-
-        seconds_units=int(f'{seconds_units:b}', 2);        
-        seconds_tens=int(f'{seconds_tens:b}', 2);
+        seconds_units = int.from_bytes(val, 'little') & 0b00001111
+        seconds_tens = (int.from_bytes(val, 'little') & 0b01110000) >> 4;
 
         #minutes
         val = i2c.readfrom_mem(RTC_ADDR, RTC_MINUTES, 1)
-        minute_units = val & 0b00001111;
-        minute_tens = (val & 0b01110000) >> 4;
-
-        minute_units=int(f'{minute_units:b}', 2);        
-        minute_tens=int(f'{minute_tens:b}', 2);      
+        minute_units = int.from_bytes(val, 'little') & 0b00001111;
+        minute_tens = (int.from_bytes(val, 'little') & 0b01110000) >> 4;
 
         #hour
         val = i2c.readfrom_mem(RTC_ADDR, RTC_HOUR, 1)
 
         # Bit 6: 12/24-hour format
-        hour_format_12 = (val & 0b01000000) >> 6
+        hour_format_12 = (int.from_bytes(val, 'little') & 0b01000000) >> 6;
         # Bit 5: AM/PM in 12-hour format or 20-hour format in 24-hour mode
-        am_pm_12 = (val & 0b00100000) >> 5
+        am_pm_12 = (int.from_bytes(val, 'little') & 0b00100000) >> 5;
         # Bits 3-0: Units digit in the hour
-        hour_units = val & 0b00001111
+        hour_units = int.from_bytes(val, 'little') & 0b00001111;
         # Bit 4: 10-hour digit in 12-hour format
-        hour_tens = (val & 0b00010000) >> 4
+        hour_tens = (int.from_bytes(val, 'little') & 0b00010000) >> 4;
 
 
         # Interpretation for the hour
@@ -68,12 +62,13 @@ try:
             else:
                 period = "AM"
             # if the format is 12h, display AM or PM at the end
-            display.text(f"{period}", x=10, y=0)
+            display.text(f"{period}", x=0, y=10)
 
-        display.text(f"{hour_tens}{hour_units:02d}:", x=0, y=0)
-        display.text(f"{minute_tens}{minute_units:02d}:", x=0, y=3)
-        display.text(f"{seconds_tens}{seconds_units:02d}:", x=0, y=6)
-    
+        display.text(f"{hour_tens}{hour_units}:", x=0, y=0)
+        display.text(f"{minute_tens}{minute_units}:", x=24, y=0)
+        display.text(f"{seconds_tens}{seconds_units}", x=48, y=0)
+        display.show();
+        
         time.sleep(1)
         display.fill(0)
         
@@ -87,6 +82,3 @@ except KeyboardInterrupt:
     # https://docs.micropython.org/en/latest/esp8266/tutorial/ssd1306.html
 
 #_________________________________________________________________________
-
-
-
